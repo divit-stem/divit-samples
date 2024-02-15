@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Divit Integration Samples</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <form id="orderForm" onsubmit="formSubmit(event)">
+      <div class="form-item-container">
+        <p class="form-item-label">
+          first name<span class="text-danger">*</span>
+        </p>
+        <input
+          id="firstname"
+          type="text"
+          name="firstname"
+          value="Alice"
+          required
+          class="form-item-content"
+        />
+      </div>
+      <div class="form-item-container">
+        <p class="form-item-label">
+          last name<span class="text-danger">*</span>
+        </p>
+        <input
+          id="lastname"
+          type="text"
+          name="lastname"
+          value="Bob"
+          required
+          class="form-item-content"
+        />
+      </div>
+      <div class="form-item-container">
+        <p class="form-item-label">email<span class="text-danger">*</span></p>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          required
+          class="form-item-content"
+        />
+      </div>
+      <div class="form-item-container">
+        <p class="form-item-label">
+          language<span class="text-danger">*</span>
+        </p>
+        <select id="language" class="form-item-content">
+          <option value="en" selected>English</option>
+          <option value="zh-hk">Trad. Chinese</option>
+          <option value="zh-cn">Simp. Chinese</option>
+        </select>
+      </div>
+      <div class="form-item-container">
+        <p class="form-item-label">
+          currency<span class="text-danger">*</span>
+        </p>
+        <select id="currency" class="form-item-content">
+          <option value="HKD" selected>HKD</option>
+        </select>
+      </div>
+      <div class="form-item-container">
+        <p class="form-item-label">
+          order item type<span class="text-danger">*</span>
+        </p>
+        <div class="form-item-content">
+          <select
+            id="itemType"
+            class="form-item-label"
+            onchange="changeSelectValue()"
+          >
+            <option value="retail">retail</option>
+            <option value="flight">flight</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div id="retailForm" class="order-item-form-container block">
+          <div style="display: flex; flex-direction: column">
+            <table id="retailTable">
+              <tr>
+                <th>product title</th>
+                <th>quantity</th>
+                <th>unit price</th>
+                <th>action</th>
+              </tr>
+              <tr>
+                <td>
+                  <input
+                    name="productTitle1"
+                    type="text"
+                    value="product 1"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    name="productQty1"
+                    type="number"
+                    class="table-input"
+                    value="2"
+                    onchange="calculateTotalPrice()"
+                  />
+                </td>
+                <td>
+                  <input
+                    name="unitPrice1"
+                    type="number"
+                    class="table-input"
+                    value="15"
+                    onchange="calculateTotalPrice()"
+                  />
+                </td>
+                <td style="text-align: center">
+                  <button
+                    type="button"
+                    class="deleteButton"
+                    onclick="handleDeleteProduct(this)"
+                  >
+                    x
+                  </button>
+                </td>
+              </tr>
+            </table>
+            <div style="margin-top: 24px">
+              <button type="button" onclick="handleAddProduct()">
+                Add another product
+              </button>
+            </div>
+            <div style="display: flex; justify-content: flex-end">
+              <p style="font-size: 20px; font-weight: 700">
+                Total amount: <span id="totalAmount_retail">$30</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div id="flightForm" class="order-item-form-container">
+          <div style="display: flex; flex-direction: column">
+            <table id="flightTable">
+              <tr>
+                <th>aircraft</th>
+                <th>departure</th>
+                <th>departure at</th>
+                <th>arrival</th>
+                <th>arrival at</th>
+              </tr>
+              <tr>
+                <td>
+                  <input
+                    id="aircraft1"
+                    name="aircraft1"
+                    type="text"
+                    value="XX001"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="departure1"
+                    name="departure1"
+                    type="text"
+                    value="MAD"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="departureAt1"
+                    name="departureAt1"
+                    type="datetime-local"
+                    value="2024-01-24T20:25:00"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="arrival1"
+                    name="arrival1"
+                    type="text"
+                    value="AMS"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="arriveat1"
+                    name="arriveat1"
+                    type="datetime-local"
+                    value="2024-01-24T23:25:00"
+                    class="table-input"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <input
+                    id="aircraft2"
+                    name="aircraft2"
+                    type="text"
+                    value="XX002"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="departure2"
+                    name="departure2"
+                    type="text"
+                    value="AMS"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="departureAt2"
+                    name="departureAt2"
+                    type="datetime-local"
+                    value="2024-01-28T20:25:00"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="arrival2"
+                    name="arrival2"
+                    type="text"
+                    value="MAD"
+                    class="table-input"
+                  />
+                </td>
+                <td>
+                  <input
+                    id="arriveat2"
+                    name="arriveat2"
+                    type="datetime-local"
+                    value="2024-01-28T23:25:00"
+                    class="table-input"
+                  />
+                </td>
+              </tr>
+            </table>
+            <div
+              style="
+                margin-top: 16px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+              "
+            >
+              <p>ticket fare</p>
+              <select id="ticket-fare" onchange="calculateTotalPrice()">
+                <option value="1800.00">1,800.00</option>
+                <option value="2400.00">2,400.00</option>
+              </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end">
+              <p style="font-size: 20px; font-weight: 700">
+                Total amount: <span id="totalAmount_flight">$0</span>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="form-item-container">
+          <p class="form-item-label">
+            order type<span class="text-danger">*</span>
+          </p>
+          <div class="form-item-content">
+            <select class="form-item-label" id="orderType">
+              <option value="paynow" selected>pay in 1 instalment</option>
+              <option value="paylater">pay in 3 instalments</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          margin-top: 40px;
+          margin-bottom: 40px;
+        "
+      >
+        <button type="submit" style="height: 40px; width: 200px">Submit</button>
+      </div>
+    </form>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,285 @@
+<html>
+  <head>
+    <title>divit integration samples (golang)</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript">
+      let orderTotal = 0;
+
+      const itemTypeChange = () => {
+        switch($("#item-type").val()) {
+          case "retail":
+            $("#retail-items").show();
+            $("#flight-items").hide();
+            break;
+          case "flight":
+            $("#retail-items").hide();
+            $("#flight-items").show();
+            break;
+        }
+        calculateTotal();
+      }
+
+      const calculateTotal = () => {
+        const itemType = $("#item-type").val();
+        if (itemType == "retail") {
+          let qty1 = parseInt($("#re-item1-qty").val(), 10);
+          qty1 = isNaN(qty1) ? 0 : qty1;
+          let price1 = parseFloat($("#re-item1-price").val(), 10);
+          price1 = isNaN(price1) ? 0 : price1;
+
+          let qty2 = parseInt($("#re-item2-qty").val(), 10);
+          qty2 = isNaN(qty2) ? 0 : qty2;
+          let price2 = parseFloat($("#re-item2-price").val(), 10);
+          price2 = isNaN(price2) ? 0 : price2;
+
+          orderTotal = (qty1 * price1) + (qty2 * price2);
+        } else {
+          let price = parseFloat($("#ticket-fare").val(), 10)
+          orderTotal = price
+        }
+        // display the calculated total
+        $("#total-amount").html("$" + orderTotal);
+      }
+
+      const formSubmit = (e) => {
+        e.preventDefault();
+
+        const orderType = $("#order-type").val();
+        const firstname = $("#firstname").val();
+        const lastname = $("#lastname").val();
+        const email = $("#email").val();
+        const language = $("#language").val();
+        const currency = $("#currency").val();
+        const itemType = $("#item-type").val();
+
+        // validate form
+        if (!firstname || !lastname || !email) {
+          alert('please input customer info, firstname, lastname, and email')
+        }
+        if (isNaN(orderTotal) || orderTotal <= 0) {
+          alert('invalid order total, please input valid the order items data');
+          return;
+        }
+
+        // disable submit button
+        $("#submit-button").prop('disabled', true)
+
+        // build the payload
+        let items = [];
+        if (itemType == "retail") {
+          items.push({ 
+            productTitle: $("#re-item1-title").val(),
+            productQty: parseInt($("#re-item1-qty").val(), 10),
+            unitPrice: parseFloat($("#re-item1-price").val(), 10),
+          });
+          items.push({ 
+            productTitle: $("#re-item2-title").val(),
+            productQty: parseInt($("#re-item2-qty").val(), 10),
+            unitPrice: parseFloat($("#re-item2-price").val(), 10),
+          });
+        } else {
+          items.push({ 
+            aircraft: $("#fl-item1-aircraft").val(),
+            departure: $("#fl-item1-departure").val(),
+            departureat: $("#fl-item1-depart-at").val(),
+            arrival: $("#fl-item1-arrival").val(),
+            arrivalat: $("#fl-item1-arrive-at").val(),
+          });
+          items.push({ 
+            aircraft: $("#fl-item2-aircraft").val(),
+            departure: $("#fl-item2-departure").val(),
+            departureat: $("#fl-item2-depart-at").val(),
+            arrival: $("#fl-item2-arrival").val(),
+            arrivalat: $("#fl-item2-arrive-at").val(),
+          })
+        }
+        let payload = {
+          firstname: firstname,
+          lastname: lastname,
+          email: email,
+          language: language,
+          currency: currency,
+          itemType: itemType,
+          items: items,
+          orderTotal: orderTotal,
+          orderType: orderType,
+        };
+        console.log('payload', payload);
+
+        // call the backend api
+        $.ajax({
+          url: "/checkout",
+          data: JSON.stringify(payload),
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          dataType : "json",
+        })
+        .done((json) => {
+
+          // create order success, redirect or here we create a link to the payment screen
+          const { data } = json
+          console.log("data", data)
+          window.location.href = data.redirectURI + "&token=" + data.token;
+
+        }).fail(function( xhr, status, errorThrown ) {
+
+          // create order failed
+          alert( "Sorry, there was a problem!" );
+          console.log( "Error: " + errorThrown );
+          console.log( "Status: " + status );
+          console.dir( xhr );
+        })
+        .always(function( xhr, status ) {
+          // enable the submit button
+          $("#submit-button").prop('disabled', false)
+        });
+      }
+
+      const resetPage = () => {
+        window.location.href = "/";
+      }
+
+      $(() => {
+        $("#checkout-form").submit(formSubmit);
+        $("#item-type").change(itemTypeChange);
+
+        // initialize form state
+        $("#item-type").val("retail");
+        itemTypeChange();
+
+        // check query parameter
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('result')) {
+          if (urlParams.get('result') == "success") {
+            $("#success-payment").show()
+            $("#failure-payment").hide()
+            $("#form-wrapper").hide()
+            return
+          } else if (urlParams.get('result') == "failed") {
+            $("#success-payment").hide()
+            $("#failure-payment").show()
+            $("#form-wrapper").hide()
+            return
+          } 
+        }
+        $("#success-payment").hide()
+        $("#failure-payment").hide()
+        $("#form-wrapper").show()
+      });
+    </script>
+  </head>
+  <body>
+    <div class="mx-auto p-2 mt-5" style="width: 600px;">
+      <div class="container">
+        <h2>divit integration sample</h2>
+        <form id="checkout-form">
+          <div id="form-wrapper">
+            <div class="input-group mb-3">
+              <input id="firstname" type="text" class="form-control" placeholder="first name" value="Peter">
+              <input id="lastname" type="text" class="form-control" placeholder="last name" value="Jones">
+              <input id="email" type="text" class="form-control" placeholder="email" value="">
+            </div>
+            <div class="mb-3">
+              <label for="currency" class="form-label">language</label>
+              <select class="form-select" id="language">
+                <option value="en" selected>English</option>
+                <option value="zh-hk">Trad. Chinese</option>
+                <option value="zh-cn">Simp. Chinese</option>
+              </select>
+              <label for="currency" class="form-label">currency</label>
+              <select class="form-select" id="currency">
+                <option value="HKD" selected>HKD</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="item-type" class="form-label">item type</label>
+              <select class="form-select" id="item-type">
+                <option value="retail">retail</option>
+                <option value="flight">flight</option>
+              </select>
+            </div>
+            <div id="retail-items" class="card">
+              <div class="card-body">
+                <h5 class="card-title">retail item</h5>
+                <div class="input-group mb-3">
+                  <input id="re-item1-title" type="text" class="form-control" placeholder="product title" value="product 1">
+                  <input id="re-item1-qty" type="text" class="form-control" placeholder="quantity" value="2" onChange="calculateTotal()">
+                  <input id="re-item1-price" type="text" class="form-control" placeholder="price" value="100.00" onChange="calculateTotal()">
+                </div>
+                <div class="input-group mb-3">
+                  <input id="re-item2-title" type="text" class="form-control" placeholder="product title" value="product 2">
+                  <input id="re-item2-qty" type="text" class="form-control" placeholder="quantity" value="1" onChange="calculateTotal()">
+                  <input id="re-item2-price" type="text" class="form-control" placeholder="price" value="150.00" onChange="calculateTotal()">
+                </div>
+              </div>
+            </div>
+            <div id="flight-items" class="card">
+              <div class="card-body">
+                <h5 class="card-title">flight item</h5>
+                <div class="input-group mb-3">
+                  <input id="fl-item1-aircraft" type="text" class="form-control" placeholder="aircraft" value="XX001">
+                  <input id="fl-item1-departure" type="text" class="form-control" placeholder="departure" value="MAD">
+                  <input id="fl-item1-depart-at" type="text" class="form-control" placeholder="time" value="2024-01-24T20:25:00">
+                  <input id="fl-item1-arrival" type="text" class="form-control" placeholder="arrival" value="AMS">
+                  <input id="fl-item1-arrive-at" type="text" class="form-control" placeholder="time" value="2024-01-24T23:25:00">
+                </div>
+                <div class="input-group mb-3">
+                  <input id="fl-item2-aircraft" type="text" class="form-control" placeholder="aircraft" value="XX002">
+                  <input id="fl-item2-departure" type="text" class="form-control" placeholder="departure" value="AMS">
+                  <input id="fl-item2-depart-at" type="text" class="form-control" placeholder="time" value="2024-01-28T20:25:00">
+                  <input id="fl-item2-arrival" type="text" class="form-control" placeholder="arrival" value="MAD">
+                  <input id="fl-item2-arrive-at" type="text" class="form-control" placeholder="time" value="2024-01-28T23:25:00">
+                </div>
+                <div class="input-group mb-3">
+                  <div class="px-3">
+                    <label for="ticket-fare" class="form-label"><b>ticket fare</b></label>
+                  </div>
+                  <select class="form-select ml-2" id="ticket-fare">
+                    <option value="1800.00" selected>1,800.00</option>
+                    <option value="2400.00">2,400.00</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3 mt-3 text-end">
+              <label for="item-type" class="form-label"><h5>total amount</h5></label>
+              <div><h4><span id="total-amount">$0</span></h4></div>
+            </div>
+            <div class="mb-3 mt-3">
+              <label for="order-type" class="form-label">order type</label>
+              <select class="form-select" id="order-type">
+                <option value="paynow" selected>pay in 1 instalment</option>
+                <option value="paylater">pay in 3 instalments</option>
+              </select>
+            </div>
+            <button id="submit-button" type="submit" class="btn btn-primary mt-3">submit</button>
+          </div>
+        </form>
+        <div id="success-payment">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Payment Success</h5>
+            </div>
+            <div class="card-footer">
+              <button type="button" class="btn btn-primary" onClick="resetPage()">Go back</button>
+            </div>
+          </div>
+        </div>
+        <div id="failure-payment">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Payment Failure</h5>
+            </div>
+            <div class="card-footer">
+              <button type="button" class="btn btn-primary" onClick="resetPage()">Go back</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  </body>
+</html>
